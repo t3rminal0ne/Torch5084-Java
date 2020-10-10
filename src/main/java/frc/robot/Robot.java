@@ -9,6 +9,8 @@ package frc.robot;
 
 //Hardware imports:
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.playingwithfusion.TimeOfFlight;
@@ -36,16 +38,19 @@ import frc.robot.JoystickButtons;
  * project.
  */
 public class Robot extends TimedRobot {
-  //DECLARING GLOBAL VARIABLES
+  //**************** */
+  //DRIVEBASE MOTORS
+  //**************** */
   //Drivebase Motor-related (corresponds to "OPENing" the TalonFX motors in LABView):
-  TalonFX driveTalonLeft = new TalonFX(1);
-  TalonFX driveTalonLeftFollow = new TalonFX(2);
-  TalonFX driveTalonRight = new TalonFX(3);
-  TalonFX driveTalonRightFollow = new TalonFX(4);
+  WPI_TalonFX driveTalonLeft = new WPI_TalonFX(1);
+  WPI_TalonFX driveTalonLeftFollow = new WPI_TalonFX(2);
+  WPI_TalonFX driveTalonRight = new WPI_TalonFX(3);
+  WPI_TalonFX driveTalonRightFollow = new WPI_TalonFX(4);
+  //idk how to instantiate SpeedController, SpeedController constructor doesn't exist
+  SpeedControllerGroup leftMotors = new SpeedControllerGroup(driveTalonLeft, driveTalonLeftFollow);
+  SpeedControllerGroup rightMotors = new SpeedControllerGroup(driveTalonRight, driveTalonRightFollow);
 
-  //RobotDrive robotDrive = new RobotDrive(driveTalonLeft, driveTalonRight);
-
-  //SpeedControllerGroup leftMotors = new SpeedControllerGroup(leftMotors, rightMotors);
+  RobotDrive twoMotorDrive = new RobotDrive(leftMotors, rightMotors);
 
   //Other Motors:
   TalonFX shooterTalon = new TalonFX(5);
@@ -97,6 +102,66 @@ public class Robot extends TimedRobot {
   boolean autoDriveStatus = false;
   boolean limelightLEDStatus = false;
 
+  //Variables that were in Joystick_Buttons and should be able to be accessed in all methods
+  boolean leftTrigger = leftStick.getRawButton(0);
+  boolean rightTrigger = rightStick.getRawButton(0);
+
+  boolean leftThumbMain = leftStick.getRawButton(1);
+  boolean rightThumbMain = rightStick.getRawButton(1);
+
+  boolean leftThumbLeft = leftStick.getRawButton(2);
+  boolean rightThumbLeft = rightStick.getRawButton(2);
+
+  boolean leftThumbRight = leftStick.getRawButton(3);
+  boolean rightThumbRight = rightStick.getRawButton(3);
+
+  boolean leftRightArrayTR = leftStick.getRawButton(4);
+  boolean rightRightArrayTR = rightStick.getRawButton(4);
+
+  boolean leftRightArrayTM = leftStick.getRawButton(5);
+  boolean rightRightArrayTM = rightStick.getRawButton(5);
+
+  boolean leftRightArrayTL = leftStick.getRawButton(6);
+  boolean rightRightArrayTL = rightStick.getRawButton(6);
+
+  boolean leftRightArrayBL = leftStick.getRawButton(7);
+  boolean rightRightArrayBL = rightStick.getRawButton(7);
+
+  boolean leftRightArrayBM = leftStick.getRawButton(8);
+  boolean rightRightArrayBM = rightStick.getRawButton(8);
+
+  boolean leftRightArrayBR = leftStick.getRawButton(9);
+  boolean rightRightArrayBR = rightStick.getRawButton(9);
+
+  boolean leftLeftArrayTL = leftStick.getRawButton(10);
+  boolean rightLeftArrayTL = rightStick.getRawButton(10);
+
+  boolean leftLeftArrayTM = leftStick.getRawButton(11);
+  boolean rightLeftArrayTM = rightStick.getRawButton(11);
+
+  boolean leftLeftArrayTR = leftStick.getRawButton(12);
+  boolean rightLeftArrayTR = rightStick.getRawButton(12);
+
+  boolean leftLeftArrayBR = leftStick.getRawButton(13);
+  boolean rightLeftArrayBR = rightStick.getRawButton(13);
+
+  boolean leftLeftArrayBM = leftStick.getRawButton(14);
+  boolean rightLeftArrayBM = rightStick.getRawButton(14);
+
+  boolean leftLeftArrayBL = leftStick.getRawButton(15);
+  boolean rightLeftArrayBL = rightStick.getRawButton(15);
+
+  //Axes Left:
+  double leftX = 0;
+  double leftY = 0;
+  double leftZ = 0;
+  double leftSlider = 0;
+  //Axis Right:
+  double rightX = 0;
+  double rightY = 0;
+  double rightZ = 0;
+  double rightSlider = 0;
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
@@ -129,6 +194,8 @@ public class Robot extends TimedRobot {
     //Talon 2 follows talon 1, talon 4 follows talon 3
     driveTalonLeftFollow.follow(driveTalonLeft);
     driveTalonRightFollow.follow(driveTalonRight);
+
+    //SpeedControllerGroup leftMotors = new SpeedControllerGroup(driveTalonLeft, driveTalonLeftFollow);
 
     //These two lines to help set PercentOutput:
     double leftStickValue = leftStick.getRawAxis(0);
@@ -192,68 +259,6 @@ public class Robot extends TimedRobot {
     timeOfFlight2.setRangingMode(RangingMode.Short, 0);
     timeOfFlight3.setRangingMode(RangingMode.Short, 0);
     timeOfFlight4.setRangingMode(RangingMode.Short, 0);
-
-    //SETTING UP BUTTONS:
-
-    boolean leftTrigger = leftStick.getRawButton(0);
-    boolean rightTrigger = rightStick.getRawButton(0);
-
-    boolean leftThumbMain = leftStick.getRawButton(1);
-    boolean rightThumbMain = rightStick.getRawButton(1);
-
-    boolean leftThumbLeft = leftStick.getRawButton(2);
-    boolean rightThumbLeft = rightStick.getRawButton(2);
-
-    boolean leftThumbRight = leftStick.getRawButton(3);
-    boolean rightThumbRight = rightStick.getRawButton(3);
-
-    boolean leftRightArrayTR = leftStick.getRawButton(4);
-    boolean rightRightArrayTR = rightStick.getRawButton(4);
-
-    boolean leftRightArrayTM = leftStick.getRawButton(5);
-    boolean rightRightArrayTM = rightStick.getRawButton(5);
-
-    boolean leftRightArrayTL = leftStick.getRawButton(6);
-    boolean rightRightArrayTL = rightStick.getRawButton(6);
-
-    boolean leftRightArrayBL = leftStick.getRawButton(7);
-    boolean rightRightArrayBL = rightStick.getRawButton(7);
-
-    boolean leftRightArrayBM = leftStick.getRawButton(8);
-    boolean rightRightArrayBM = rightStick.getRawButton(8);
-
-    boolean leftRightArrayBR = leftStick.getRawButton(9);
-    boolean rightRightArrayBR = rightStick.getRawButton(9);
-
-    boolean leftLeftArrayTL = leftStick.getRawButton(10);
-    boolean rightLeftArrayTL = rightStick.getRawButton(10);
-
-    boolean leftLeftArrayTM = leftStick.getRawButton(11);
-    boolean rightLeftArrayTM = rightStick.getRawButton(11);
-
-    boolean leftLeftArrayTR = leftStick.getRawButton(12);
-    boolean rightLeftArrayTR = rightStick.getRawButton(12);
-
-    boolean leftLeftArrayBR = leftStick.getRawButton(13);
-    boolean rightLeftArrayBR = rightStick.getRawButton(13);
-
-    boolean leftLeftArrayBM = leftStick.getRawButton(14);
-    boolean rightLeftArrayBM = rightStick.getRawButton(14);
-
-    boolean leftLeftArrayBL = leftStick.getRawButton(15);
-    boolean rightLeftArrayBL = rightStick.getRawButton(15);
-
-    //Axes Left:
-    double leftX = 0;
-    double leftY = 0;
-    double leftZ = 0;
-    double leftSlider = 0;
-    //Axis Right:
-    double rightX = 0;
-    double rightY = 0;
-    double rightZ = 0;
-    double rightSlider = 0;
-
 
     // **************************
     // ACTUAL TELEOP
