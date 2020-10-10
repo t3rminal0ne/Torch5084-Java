@@ -10,14 +10,23 @@ package frc.robot;
 //Hardware imports:
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.playingwithfusion.TimeOfFlight;
+import com.playingwithfusion.TimeOfFlight.RangingMode;
+
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Compressor;
-import com.playingwithfusion.TimeOfFlight;
+import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
 
 //Other imports:
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
+
+import frc.robot.JoystickButtons;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -29,14 +38,18 @@ import edu.wpi.first.wpilibj.Timer;
 public class Robot extends TimedRobot {
   //DECLARING GLOBAL VARIABLES
   //Drivebase Motor-related (corresponds to "OPENing" the TalonFX motors in LABView):
-  TalonFX driveBaseTalon1 = new TalonFX(1);
-  TalonFX driveBaseTalon2 = new TalonFX(2);
-  TalonFX driveBaseTalon3 = new TalonFX(3);
-  TalonFX driveBaseTalon4 = new TalonFX(4);
+  TalonFX driveTalonLeft = new TalonFX(1);
+  TalonFX driveTalonLeftFollow = new TalonFX(2);
+  TalonFX driveTalonRight = new TalonFX(3);
+  TalonFX driveTalonRightFollow = new TalonFX(4);
+
+  //RobotDrive robotDrive = new RobotDrive(driveTalonLeft, driveTalonRight);
+
+  //SpeedControllerGroup leftMotors = new SpeedControllerGroup(leftMotors, rightMotors);
 
   //Other Motors:
-  TalonFX shooterTalon1 = new TalonFX(5);
-  TalonFX shooterTalon2 = new TalonFX(6);
+  TalonFX shooterTalon = new TalonFX(5);
+  TalonFX shooterTalonFollow = new TalonFX(6);
 
   TalonFX acceleratorTalon = new TalonFX(7);
   TalonFX conveyorTalon = new TalonFX(8);
@@ -64,6 +77,26 @@ public class Robot extends TimedRobot {
   TimeOfFlight timeOfFlight3 = new TimeOfFlight(3);
   TimeOfFlight timeOfFlight4 = new TimeOfFlight(4);
 
+  //Whatever DIO is:
+  //Gyro:
+  AnalogGyro gyro = new AnalogGyro(0);
+
+  //Whisker:
+
+  //Creating an instance of the JoystickButtons class so we can use the method in the class:
+  JoystickButtons joystickButtons = new JoystickButtons();
+
+  //Variables that were originally in Global Vars.vi
+  boolean fireStatus = false;
+  boolean aimStatus = false;
+  boolean fire = false;
+  boolean intakeReverse = false;
+  boolean shooterSideForward = false;
+  boolean sensor1Override = false;
+  boolean autoDrive = false;
+  boolean autoDriveStatus = false;
+  boolean limelightLEDStatus = false;
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
@@ -82,41 +115,47 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+    
   }
 
   @Override
   public void teleopPeriodic() {
 
+    // **************************
+    // TELEOP SETUP
+    // **************************
+    joystickButtons.initializeJoystickButtons();
     //DRIVEBASE TALON STUFF:
     //Talon 2 follows talon 1, talon 4 follows talon 3
-    driveBaseTalon2.follow(driveBaseTalon1);
-    driveBaseTalon4.follow(driveBaseTalon3);
+    driveTalonLeftFollow.follow(driveTalonLeft);
+    driveTalonRightFollow.follow(driveTalonRight);
 
     //These two lines to help set PercentOutput:
     double leftStickValue = leftStick.getRawAxis(0);
     double rightStickValue = rightStick.getRawAxis(0);
 
     //Corresponds to "MC SET B/C MODE" (can't figure out what NeutralMode options there are)
-    //talon1.setNeutralMode();
-    //talon3.setNeutralMode();
+    driveTalonLeft.setNeutralMode(NeutralMode.Brake);
+    driveTalonRight.setNeutralMode(NeutralMode.Brake);
 
     //Set percent output for talon1 and talon3 (talon 2 and 4 follow 1 and 3, respectively)
-    driveBaseTalon1.set(ControlMode.PercentOutput, leftStickValue);
-    driveBaseTalon3.set(ControlMode.PercentOutput, rightStickValue);
+    driveTalonLeft.set(ControlMode.PercentOutput, leftStickValue);
+    driveTalonRight.set(ControlMode.PercentOutput, rightStickValue);
   
     //Corresponds to "MC DEAD BAND" in LABView (guess)
-    driveBaseTalon1.configNeutralDeadband(.1);
-    driveBaseTalon3.configNeutralDeadband(.1);
+    driveTalonLeft.configNeutralDeadband(.1);
+    driveTalonRight.configNeutralDeadband(.1);
 
     //Corresponds to "MC SET SENSOR POS" in LABView (guess)
-    driveBaseTalon1.setSelectedSensorPosition(0);
-    driveBaseTalon3.setSelectedSensorPosition(0);
+    driveTalonLeft.setSelectedSensorPosition(0);
+    driveTalonRight.setSelectedSensorPosition(0);
 
     //Missing code for "MC CONFIG PIDF"
 
+
     //SHOOTER TALON STUFF:
-    shooterTalon2.follow(shooterTalon1);
-    shooterTalon2.setInverted(true);
+    shooterTalonFollow.follow(shooterTalon);
+    shooterTalonFollow.setInverted(true);
     //Missing code for "MC CONFIG PIDF"
 
     //ACCELERATOR TALON STUFF:
@@ -143,15 +182,92 @@ public class Robot extends TimedRobot {
     climberTalon1.configVoltageCompSaturation(12);
 
     //SOLENOID STUFF:
+    //intakePistonSolenoid.setSolenoidChannel?
 
     //COMPRESSOR STUFF:
     compressor.start();
 
     //TIME OF FLIGHT:
-    // timeOfFlight1.setRangingMode();
-    // timeOfFlight2.setRangingMode();
-    // timeOfFlight3.setRangingMode();
-    // timeOfFlight4.setRangingMode();
+    timeOfFlight1.setRangingMode(RangingMode.Short, 0);
+    timeOfFlight2.setRangingMode(RangingMode.Short, 0);
+    timeOfFlight3.setRangingMode(RangingMode.Short, 0);
+    timeOfFlight4.setRangingMode(RangingMode.Short, 0);
+
+    //SETTING UP BUTTONS:
+
+    boolean leftTrigger = leftStick.getRawButton(0);
+    boolean rightTrigger = rightStick.getRawButton(0);
+
+    boolean leftThumbMain = leftStick.getRawButton(1);
+    boolean rightThumbMain = rightStick.getRawButton(1);
+
+    boolean leftThumbLeft = leftStick.getRawButton(2);
+    boolean rightThumbLeft = rightStick.getRawButton(2);
+
+    boolean leftThumbRight = leftStick.getRawButton(3);
+    boolean rightThumbRight = rightStick.getRawButton(3);
+
+    boolean leftRightArrayTR = leftStick.getRawButton(4);
+    boolean rightRightArrayTR = rightStick.getRawButton(4);
+
+    boolean leftRightArrayTM = leftStick.getRawButton(5);
+    boolean rightRightArrayTM = rightStick.getRawButton(5);
+
+    boolean leftRightArrayTL = leftStick.getRawButton(6);
+    boolean rightRightArrayTL = rightStick.getRawButton(6);
+
+    boolean leftRightArrayBL = leftStick.getRawButton(7);
+    boolean rightRightArrayBL = rightStick.getRawButton(7);
+
+    boolean leftRightArrayBM = leftStick.getRawButton(8);
+    boolean rightRightArrayBM = rightStick.getRawButton(8);
+
+    boolean leftRightArrayBR = leftStick.getRawButton(9);
+    boolean rightRightArrayBR = rightStick.getRawButton(9);
+
+    boolean leftLeftArrayTL = leftStick.getRawButton(10);
+    boolean rightLeftArrayTL = rightStick.getRawButton(10);
+
+    boolean leftLeftArrayTM = leftStick.getRawButton(11);
+    boolean rightLeftArrayTM = rightStick.getRawButton(11);
+
+    boolean leftLeftArrayTR = leftStick.getRawButton(12);
+    boolean rightLeftArrayTR = rightStick.getRawButton(12);
+
+    boolean leftLeftArrayBR = leftStick.getRawButton(13);
+    boolean rightLeftArrayBR = rightStick.getRawButton(13);
+
+    boolean leftLeftArrayBM = leftStick.getRawButton(14);
+    boolean rightLeftArrayBM = rightStick.getRawButton(14);
+
+    boolean leftLeftArrayBL = leftStick.getRawButton(15);
+    boolean rightLeftArrayBL = rightStick.getRawButton(15);
+
+    //Axes Left:
+    double leftX = 0;
+    double leftY = 0;
+    double leftZ = 0;
+    double leftSlider = 0;
+    //Axis Right:
+    double rightX = 0;
+    double rightY = 0;
+    double rightZ = 0;
+    double rightSlider = 0;
+
+
+    // **************************
+    // ACTUAL TELEOP
+    // **************************
+
+    if (rightThumbLeft) {
+      shooterSideForward = false;
+    } else {
+      if (rightThumbRight) {
+        shooterSideForward = true;
+      } else {
+        //nothing
+      }
+    }
   }
 
   @Override
