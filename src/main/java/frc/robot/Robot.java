@@ -62,8 +62,8 @@ public class Robot extends TimedRobot {
   TalonFX innerIntakeTalon = new TalonFX(9);
   TalonFX outerIntakeTalon = new TalonFX(10);
 
-  TalonFX climberTalon1 = new TalonFX(1);
-  TalonFX climberTalon2 = new TalonFX(2);
+  TalonFX climberTalon = new TalonFX(1);
+  TalonFX climberTalonFollow = new TalonFX(2);
 
   //Joystick:
   Joystick leftStick = new Joystick(0);
@@ -103,53 +103,50 @@ public class Robot extends TimedRobot {
   boolean limelightLEDStatus = false;
 
   //Variables that were in Joystick_Buttons and should be able to be accessed in all methods
+  //
+  // ????????????????????????????????????????????????????????
+  // cluster = {x:10 y:10} cluster.x = 10, cluster.y = 10
+  // ????????????????????????????????????????????????????????
+  //
+  //
+  //
+  //
+  //
+  //Left joystick buttons:
   boolean leftTrigger = leftStick.getRawButton(0);
-  boolean rightTrigger = rightStick.getRawButton(0);
-
   boolean leftThumbMain = leftStick.getRawButton(1);
-  boolean rightThumbMain = rightStick.getRawButton(1);
-
   boolean leftThumbLeft = leftStick.getRawButton(2);
-  boolean rightThumbLeft = rightStick.getRawButton(2);
-
   boolean leftThumbRight = leftStick.getRawButton(3);
-  boolean rightThumbRight = rightStick.getRawButton(3);
-
   boolean leftRightArrayTR = leftStick.getRawButton(4);
-  boolean rightRightArrayTR = rightStick.getRawButton(4);
-
   boolean leftRightArrayTM = leftStick.getRawButton(5);
-  boolean rightRightArrayTM = rightStick.getRawButton(5);
-
   boolean leftRightArrayTL = leftStick.getRawButton(6);
-  boolean rightRightArrayTL = rightStick.getRawButton(6);
-
   boolean leftRightArrayBL = leftStick.getRawButton(7);
-  boolean rightRightArrayBL = rightStick.getRawButton(7);
-
   boolean leftRightArrayBM = leftStick.getRawButton(8);
-  boolean rightRightArrayBM = rightStick.getRawButton(8);
-
   boolean leftRightArrayBR = leftStick.getRawButton(9);
-  boolean rightRightArrayBR = rightStick.getRawButton(9);
-
   boolean leftLeftArrayTL = leftStick.getRawButton(10);
-  boolean rightLeftArrayTL = rightStick.getRawButton(10);
-
   boolean leftLeftArrayTM = leftStick.getRawButton(11);
-  boolean rightLeftArrayTM = rightStick.getRawButton(11);
-
   boolean leftLeftArrayTR = leftStick.getRawButton(12);
-  boolean rightLeftArrayTR = rightStick.getRawButton(12);
-
   boolean leftLeftArrayBR = leftStick.getRawButton(13);
-  boolean rightLeftArrayBR = rightStick.getRawButton(13);
-
   boolean leftLeftArrayBM = leftStick.getRawButton(14);
-  boolean rightLeftArrayBM = rightStick.getRawButton(14);
-
   boolean leftLeftArrayBL = leftStick.getRawButton(15);
-  boolean rightLeftArrayBL = rightStick.getRawButton(15);
+
+  //Right joystick buttons:
+  boolean rightTrigger = rightStick.getRawButton(0);
+  boolean rightThumbMain = rightStick.getRawButton(1);
+  boolean rightThumbLeft = rightStick.getRawButton(2);
+  boolean rightThumbRight = rightStick.getRawButton(3);
+  boolean rightLeftArrayTL = rightStick.getRawButton(4);
+  boolean rightLeftArrayTM = rightStick.getRawButton(5);
+  boolean rightLeftArrayTR = rightStick.getRawButton(6);
+  boolean rightLeftArrayBR = rightStick.getRawButton(7);
+  boolean rightLeftArrayBM = rightStick.getRawButton(8);
+  boolean rightLeftArrayBL = rightStick.getRawButton(9);
+  boolean rightRightArrayTR = rightStick.getRawButton(10);
+  boolean rightRightArrayTM = rightStick.getRawButton(11);
+  boolean rightRightArrayTL = rightStick.getRawButton(12);
+  boolean rightRightArrayBL = rightStick.getRawButton(13);
+  boolean rightRightArrayBM = rightStick.getRawButton(14);
+  boolean rightRightArrayBR = rightStick.getRawButton(15);
 
   //Axes Left:
   double leftX = 0;
@@ -242,11 +239,11 @@ public class Robot extends TimedRobot {
     outerIntakeTalon.configVoltageCompSaturation(12);
 
     //CLIMBER STUFF:
-    climberTalon2.follow(climberTalon1);
-    climberTalon1.setInverted(true);
+    climberTalonFollow.follow(climberTalon);
+    climberTalon.setInverted(true);
 
-    climberTalon1.enableVoltageCompensation(true);
-    climberTalon1.configVoltageCompSaturation(12);
+    climberTalon.enableVoltageCompensation(true);
+    climberTalon.configVoltageCompSaturation(12);
 
     //SOLENOID STUFF:
     //intakePistonSolenoid.setSolenoidChannel?
@@ -272,6 +269,15 @@ public class Robot extends TimedRobot {
       } else {
         //nothing
       }
+    }
+
+    //****** */
+    //PERIODIC TASKS
+    //****** */
+    if (rightRightArrayTL) {
+      climberTalon.set(ControlMode.PercentOutput, .7);
+    } else {
+      climberTalon.set(ControlMode.PercentOutput, 0);
     }
   }
 
