@@ -78,7 +78,7 @@ public class Robot extends TimedRobot {
   TimeOfFlight timeOfFlight2 = new TimeOfFlight(2);
   TimeOfFlight timeOfFlight3 = new TimeOfFlight(3);
   TimeOfFlight timeOfFlight4 = new TimeOfFlight(4);
-
+ 
   //Whatever DIO is:
   //Gyro:
   AnalogGyro gyro = new AnalogGyro(0);
@@ -279,6 +279,18 @@ public class Robot extends TimedRobot {
       }
     }
 
+    if (rightRightArrayBM) {
+      //Limelight code
+    } else {
+      if (leftThumbMain) {
+        //More limelight code
+      } else {
+        if (shooterSideForward) {
+          //Guessing code:
+        }
+      }
+    }
+
     //****** */
     //PERIODIC TASKS
     //****** */
@@ -287,7 +299,101 @@ public class Robot extends TimedRobot {
     } else {
       climberTalon.set(ControlMode.PercentOutput, 0);
     }
+
+    //
+    // INTAKE CODE
+    //
+    if (leftTrigger) {
+      innerIntakeTalon.set(ControlMode.PercentOutput, .4);
+      conveyorTalon.set(ControlMode.PercentOutput, .6);
+    } else {
+      if (tof1SeesBall() && tof4SeesBall()) {
+        innerIntakeTalon.set(ControlMode.PercentOutput, 0);
+      } else {
+        if (rightTrigger && !leftLeftArrayBL) {
+          innerIntakeTalon.set(ControlMode.PercentOutput, 1);
+        } else if (rightTrigger && leftLeftArrayBL) {
+          innerIntakeTalon.set(ControlMode.PercentOutput, -1);
+        } else {
+          innerIntakeTalon.set(ControlMode.PercentOutput, 0);
+        }
+      }
+
+      if (leftLeftArrayBL) {
+        if (((tof2SeesBall()||tof3SeesBall()) && !tof4SeesBall())||rightRightArrayTR) {
+          conveyorTalon.set(ControlMode.PercentOutput, -1);
+        } else {
+          conveyorTalon.set(ControlMode.PercentOutput, 0);
+        }
+      } else {
+        if (((tof2SeesBall()||tof3SeesBall()) && !tof4SeesBall())||rightRightArrayTR) {
+          conveyorTalon.set(ControlMode.PercentOutput, .6);
+        } else {
+          conveyorTalon.set(ControlMode.PercentOutput, 0);
+        }
+      }
+    }
+
+    if ((leftLeftArrayBL||leftThumbLeft)||outerIntakeTalon.getStatorCurrent()>160) {
+      if (rightTrigger) {
+        outerIntakeTalon.set(ControlMode.PercentOutput, -1);
+        intakePistonSolenoid.set(true);
+      } else {
+        outerIntakeTalon.set(ControlMode.PercentOutput, 0);
+        intakePistonSolenoid.set(false);
+      }
+    } else {
+      if (rightTrigger) {
+        outerIntakeTalon.set(ControlMode.PercentOutput, .65);
+        intakePistonSolenoid.set(true);
+      } else {
+        outerIntakeTalon.set(ControlMode.PercentOutput, 0);
+        intakePistonSolenoid.set(false);
+      }
+    }
+
   }
+
+  ///////////////////////
+  // HELPER METHODS FOR PERIODIC TASKS
+  //////////////////////
+  public boolean tof1SeesBall() {
+    if (timeOfFlight1.getRange() < 110) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean tof2SeesBall() {
+    if (timeOfFlight2.getRange() < 100) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean tof3SeesBall() {
+    if (timeOfFlight3.getRange() < 100) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean tof4SeesBall() {
+    if (timeOfFlight4.getRange() < 110) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  
+
+
+
+
 
   @Override
   public void testInit() {
