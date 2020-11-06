@@ -161,6 +161,24 @@ public class Robot extends TimedRobot {
   double rightZ = 0;
   double rightSlider = 0;
 
+
+  // AUTONOMOUS VARIABLES:
+  String currentAutoPeriod = "Init";
+
+  boolean isReverse = false;
+
+  int travelDistanceLN1 = 36;
+  int travelDistanceLN2;
+  int travelDistanceLN3;
+  int travelDistanceLN4;
+  int travelDistanceLN5;
+  int travelDistanceLN6;
+
+  double maxDriveSlow3;
+  double maxDriveSlow4;
+  double maxDriveFast4;
+  double maxDriveFast5;
+
   // ????????????????????????????????????????????????????????
   // GLOBAL VARS
   // ????????????????????????????????????????????????????????
@@ -252,10 +270,31 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+
+    driveTalonRight.setSelectedSensorPosition(0);
+    driveTalonRightFollow.setSelectedSensorPosition(0);
+    driveTalonLeft.setSelectedSensorPosition(0);
+    driveTalonLeftFollow.setSelectedSensorPosition(0);
+
+    boolean driveInitDecision = (0+1 >= 10);
+
+    if (driveInitDecision) {
+      currentAutoPeriod = "Drive";
+    }
   }
 
   @Override
   public void autonomousPeriodic() {
+
+    if (currentAutoPeriod == "Drive") {
+      //twoMotorDrive.arcadeDrive(moveStick, moveAxis, rotateStick, rotateAxis);
+
+      if (isReverse) {
+        // -1 multiplied by the result of that giant feedback loop
+      } else {
+        // 1 multiplied by the result of that giant feedback loop
+      }
+    }
   }
 
   @Override
